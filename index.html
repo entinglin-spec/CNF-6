@@ -627,9 +627,12 @@ button { font-family: inherit; cursor: pointer; }
         </div>
 
         <div class="form-row" id="closureAllDayRow">
-          <label class="form-label">全天休息</label>
+          <label class="form-label">休息時間</label>
           <div class="form-control">
-            <label class="day-checks single-check"><input type="checkbox" id="closureAllDay" checked /></label>
+            <div class="day-checks" id="closureAllDayChoice">
+              <label><input type="radio" name="closureAllDay" value="all" checked /><span>全天</span></label>
+              <label><input type="radio" name="closureAllDay" value="range" /><span>指定時段</span></label>
+            </div>
           </div>
         </div>
 
@@ -1098,10 +1101,12 @@ function openClosureModal(index) {
   $$('#closureTypeChoice input[type=radio]').forEach(r => {
     r.checked = r.value === closureWork.type;
   });
+  $$('#closureAllDayChoice input[type=radio]').forEach(r => {
+    r.checked = r.value === (closureWork.allDay ? 'all' : 'range');
+  });
   $('#closureReason').value = closureWork.reason;
   $('#closureFrom').value = closureWork.from;
   $('#closureTo').value = closureWork.to;
-  $('#closureAllDay').checked = closureWork.allDay;
   applyClosureTypeUI();
   renderClosureSlots();
   closureModal.hidden = false;
@@ -1144,8 +1149,10 @@ closuresBody.addEventListener('click', (e) => {
   }
 });
 
-$('#closureAllDay').addEventListener('change', (e) => {
-  closureWork.allDay = e.target.checked;
+$('#closureAllDayChoice').addEventListener('change', (e) => {
+  const r = e.target.closest('input[type=radio]');
+  if (!r || !closureWork) return;
+  closureWork.allDay = r.value === 'all';
   applyClosureTypeUI();
 });
 $('#closureTypeChoice').addEventListener('change', (e) => {
