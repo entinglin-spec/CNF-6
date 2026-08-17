@@ -144,13 +144,18 @@ button { font-family: inherit; cursor: pointer; }
 .data-table th { background: #f9fafb; font-weight: 500; color: #4b5563; }
 .data-table .w-100 { width: 110px; }
 .data-table .w-slot { width: 200px; }
-.data-table .w-type { width: 120px; }
-.type-badge {
-  display: inline-block; padding: 2px 10px; border-radius: 999px;
-  font-size: 12px; font-weight: 500; line-height: 1.6;
+.vis-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; line-height: 1.6; margin-left: 6px;
+  vertical-align: middle;
 }
-.type-badge.closure { background: #fdecea; color: #b42318; }
-.type-badge.hoursChange { background: #e0f2fe; color: #0369a1; }
+.vis-tag svg { flex-shrink: 0; }
+.vis-tag.on { background: #ecfdf5; color: #059669; }
+.vis-tag.off { background: #f3f4f6; color: #6b7280; }
+.field-error { color: #ef4444; font-size: 13px; padding-top: 6px; }
+.reason-input.invalid { border-color: #ef4444; }
+.reason-input.invalid:focus { border-color: #ef4444; }
 .empty-row td { padding: 12px; }
 .slot-add { display: inline-flex; align-items: center; gap: 12px; }
 .slot-add .time-input { width: 140px; }
@@ -465,10 +470,9 @@ button { font-family: inherit; cursor: pointer; }
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th class="w-type">類型</th>
                     <th>原因</th>
                     <th>起訖日期</th>
-                    <th class="w-slot">時段</th>
+                    <th class="w-slot">營業時段</th>
                     <th class="w-100">設定</th>
                   </tr>
                 </thead>
@@ -553,10 +557,9 @@ button { font-family: inherit; cursor: pointer; }
         <table class="data-table">
           <thead>
             <tr>
-              <th class="w-type">類型</th>
               <th>原因</th>
               <th>起訖日期</th>
-              <th>時段</th>
+              <th>營業時段</th>
             </tr>
           </thead>
           <tbody id="closureHistoryBody"></tbody>
@@ -594,21 +597,17 @@ button { font-family: inherit; cursor: pointer; }
         </button>
       </div>
       <div class="modal-body">
-        <div class="form-row">
-          <label class="form-label">類型</label>
-          <div class="form-control">
-            <div class="day-checks" id="closureTypeChoice">
-              <label><input type="radio" name="closureType" value="closure" checked /><span>臨時店休</span></label>
-              <label><input type="radio" name="closureType" value="hoursChange" /><span>營業異動</span></label>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
+        <div class="form-row align-top">
           <label class="form-label">原因</label>
-          <div class="form-control reason-row">
-            <input type="text" class="input reason-input" id="closureReason" placeholder="可填寫異動原因，將顯示於消費者端" />
-            <button class="btn btn-primary btn-sm" id="openI18nBtn">多語系</button>
+          <div class="form-control">
+            <div class="reason-row">
+              <input type="text" class="input reason-input" id="closureReason" placeholder="可填寫異動原因" />
+              <button class="btn btn-primary btn-sm" id="openI18nBtn">多語系</button>
+            </div>
+            <div class="day-checks" style="padding-top: 10px;">
+              <label><input type="checkbox" id="closureShowToCustomer" /><span>顯示於消費者端</span></label>
+            </div>
+            <div class="field-error" id="closureReasonError" hidden>勾選「顯示於消費者端」時需填寫原因</div>
           </div>
         </div>
 
@@ -628,28 +627,26 @@ button { font-family: inherit; cursor: pointer; }
           </div>
         </div>
 
-        <div class="form-row" id="closureAllDayRow">
-          <label class="form-label">休息時間</label>
+        <div class="form-row align-top" id="closureAllDayRow">
+          <label class="form-label">異動方式</label>
           <div class="form-control">
-            <div class="day-checks" id="closureAllDayChoice">
-              <label><input type="radio" name="closureAllDay" value="all" checked /><span>全天</span></label>
-              <label><input type="radio" name="closureAllDay" value="range" /><span>指定時段</span></label>
+            <div class="day-checks" id="closureModeChoice">
+              <label><input type="radio" name="closureMode" value="all" checked /><span>休全天</span></label>
+              <label><input type="radio" name="closureMode" value="range" /><span>時段調整</span></label>
             </div>
-          </div>
-        </div>
-
-        <div class="form-row align-top" id="closureSlotsRow" hidden>
-          <label class="form-label"></label>
-          <div class="form-control">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th id="closureSlotsHeader">休息時段</th>
-                  <th class="w-100">設定</th>
-                </tr>
-              </thead>
-              <tbody id="closureSlotsBody"></tbody>
-            </table>
+            <div class="form-row align-top" id="closureSlotsRow" hidden style="padding: 12px 0 0;">
+              <div class="form-control" style="padding: 0;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>營業時段</th>
+                      <th class="w-100">設定</th>
+                    </tr>
+                  </thead>
+                  <tbody id="closureSlotsBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -916,26 +913,24 @@ function todayISO() {
   return `${y}-${m}-${day}`;
 }
 
-const CLOSURE_TYPE_LABELS = { closure: '臨時店休', hoursChange: '營業異動' };
-
 const closureState = {
   list: [
-    { type: 'closure', reason: '元旦店休', i18n: { en: '', ja: '' }, from: '2026-01-01', to: '2026-01-01', allDay: true, slots: [] },
-    { type: 'closure', reason: '農曆春節休假', i18n: { en: '', ja: '' }, from: '2026-02-16', to: '2026-02-20', allDay: true, slots: [] },
-    { type: 'closure', reason: '員工教育訓練', i18n: { en: '', ja: '' }, from: '2026-03-02', to: '2026-03-02', allDay: false, slots: [{ start: '13:00', end: '17:00', overnight: false }] },
-    { type: 'closure', reason: '清明連假調整', i18n: { en: '', ja: '' }, from: '2026-04-04', to: '2026-04-06', allDay: true, slots: [] },
-    { type: 'hoursChange', reason: '春季延長營業', i18n: { en: '', ja: '' }, from: '2026-04-10', to: '2026-04-12', allDay: false, slots: [{ start: '08:00', end: '23:00', overnight: false }] },
-    { type: 'closure', reason: '冷氣維修', i18n: { en: '', ja: '' }, from: '2026-04-18', to: '2026-04-18', allDay: false, slots: [{ start: '10:00', end: '14:00', overnight: false }] },
-    { type: 'closure', reason: '勞動節店休', i18n: { en: '', ja: '' }, from: '2026-05-01', to: '2026-05-01', allDay: true, slots: [] },
-    { type: 'hoursChange', reason: '母親節提早開店', i18n: { en: '', ja: '' }, from: '2026-05-09', to: '2026-05-10', allDay: false, slots: [{ start: '07:00', end: '22:00', overnight: false }] },
-    { type: 'closure', reason: '店內裝修', i18n: { en: '', ja: '' }, from: '2026-05-18', to: '2026-05-20', allDay: true, slots: [] },
-    { type: 'closure', reason: '盤點作業', i18n: { en: '', ja: '' }, from: '2026-05-24', to: '2026-05-24', allDay: false, slots: [{ start: '20:00', end: '23:00', overnight: false }] },
-    { type: 'closure', reason: '系統升級', i18n: { en: '', ja: '' }, from: '2026-05-25', to: '2026-05-25', allDay: false, slots: [{ start: '22:00', end: '02:00', overnight: true }] },
-    { type: 'closure', reason: '臨時停電', i18n: { en: '', ja: '' }, from: '2026-05-26', to: '2026-05-26', allDay: true, slots: [] },
-    { type: 'closure', reason: '端午連假', i18n: { en: '', ja: '' }, from: '2026-06-19', to: '2026-06-21', allDay: true, slots: [] },
-    { type: 'hoursChange', reason: '暑期夜間延長營業', i18n: { en: '', ja: '' }, from: '2026-07-01', to: '2026-08-31', allDay: false, slots: [{ start: '11:00', end: '23:30', overnight: false }] },
-    { type: 'closure', reason: '中秋連假', i18n: { en: '', ja: '' }, from: '2026-09-25', to: '2026-09-27', allDay: true, slots: [] },
-    { type: 'closure', reason: '員工旅遊', i18n: { en: '', ja: '' }, from: '2026-10-15', to: '2026-10-15', allDay: false, slots: [{ start: '12:00', end: '18:00', overnight: false }] },
+    { type: 'closure', reason: '元旦店休', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-01-01', to: '2026-01-01', allDay: true, slots: [] },
+    { type: 'closure', reason: '農曆春節休假', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-02-16', to: '2026-02-20', allDay: true, slots: [] },
+    { type: 'hoursChange', reason: '員工教育訓練（下午暫停）', showToCustomer: false, i18n: { en: '', ja: '' }, from: '2026-03-02', to: '2026-03-02', allDay: false, slots: [{ start: '09:00', end: '12:00', overnight: false }] },
+    { type: 'closure', reason: '清明連假調整', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-04-04', to: '2026-04-06', allDay: true, slots: [] },
+    { type: 'hoursChange', reason: '春季延長營業', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-04-10', to: '2026-04-12', allDay: false, slots: [{ start: '08:00', end: '23:00', overnight: false }] },
+    { type: 'closure', reason: '冷氣維修', showToCustomer: false, i18n: { en: '', ja: '' }, from: '2026-04-18', to: '2026-04-18', allDay: true, slots: [] },
+    { type: 'closure', reason: '勞動節店休', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-05-01', to: '2026-05-01', allDay: true, slots: [] },
+    { type: 'hoursChange', reason: '母親節提早開店', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-05-09', to: '2026-05-10', allDay: false, slots: [{ start: '07:00', end: '22:00', overnight: false }] },
+    { type: 'closure', reason: '店內裝修', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-05-18', to: '2026-05-20', allDay: true, slots: [] },
+    { type: 'hoursChange', reason: '盤點作業（提早打烊）', showToCustomer: false, i18n: { en: '', ja: '' }, from: '2026-05-24', to: '2026-05-24', allDay: false, slots: [{ start: '11:00', end: '20:00', overnight: false }] },
+    { type: 'hoursChange', reason: '系統升級（延後開店）', showToCustomer: false, i18n: { en: '', ja: '' }, from: '2026-05-25', to: '2026-05-25', allDay: false, slots: [{ start: '14:00', end: '22:00', overnight: false }] },
+    { type: 'closure', reason: '臨時停電', showToCustomer: false, i18n: { en: '', ja: '' }, from: '2026-05-26', to: '2026-05-26', allDay: true, slots: [] },
+    { type: 'closure', reason: '端午連假', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-06-19', to: '2026-06-21', allDay: true, slots: [] },
+    { type: 'hoursChange', reason: '暑期夜間延長營業', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-07-01', to: '2026-08-31', allDay: false, slots: [{ start: '11:00', end: '23:30', overnight: false }] },
+    { type: 'closure', reason: '中秋連假', showToCustomer: true, i18n: { en: '', ja: '' }, from: '2026-09-25', to: '2026-09-27', allDay: true, slots: [] },
+    { type: 'closure', reason: '員工旅遊', showToCustomer: false, i18n: { en: '', ja: '' }, from: '2026-10-15', to: '2026-10-15', allDay: true, slots: [] },
   ],
 };
 let editingClosureIndex = -1;
@@ -949,20 +944,25 @@ function formatDateTC(iso) {
   return `${y}/${m}/${d} (${WEEK_TC[dow]})`;
 }
 
-function closureSlotText(c) {
-  if (c.type === 'hoursChange') {
-    return c.slots.length
-      ? c.slots.map(s => s.overnight ? `${s.start} ~ 隔日 ${s.end}` : `${s.start} ~ ${s.end}`).join('<br>')
-      : '-';
-  }
-  if (c.allDay) return '休全天';
-  if (!c.slots.length) return '-';
-  return c.slots.map(s => s.overnight ? `休 ${s.start} ~ 隔日 ${s.end}` : `休 ${s.start} ~ ${s.end}`).join('<br>');
+const EYE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 4.22-5.16"/><path d="M9.9 4.24A10.44 10.44 0 0 1 12 4c7 0 11 7 11 7a19.5 19.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+function visibilityTag(showToCustomer) {
+  return showToCustomer
+    ? `<span class="vis-tag on">${EYE_SVG}<span>對外</span></span>`
+    : `<span class="vis-tag off">${EYE_OFF_SVG}<span>內部</span></span>`;
 }
 
-function closureTypeBadge(type) {
-  const t = type || 'closure';
-  return `<span class="type-badge ${t}">${CLOSURE_TYPE_LABELS[t]}</span>`;
+function reasonCell(c) {
+  const reasonText = (c.reason && c.reason.trim()) ? c.reason : '-';
+  return `<span>${reasonText}</span>${visibilityTag(!!c.showToCustomer)}`;
+}
+
+function closureSlotText(c) {
+  if (c.allDay) return '休全天';
+  return c.slots.length
+    ? c.slots.map(s => s.overnight ? `${s.start} ~ 隔日 ${s.end}` : `${s.start} ~ ${s.end}`).join('<br>')
+    : '-';
 }
 
 function isClosureExpired(c) {
@@ -976,19 +976,17 @@ function renderClosuresTable() {
     .filter(({ c }) => !isClosureExpired(c));
   if (!active.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="5" style="color:#9ca3af;">無設定資料</td>`;
+    tr.innerHTML = `<td colspan="4" style="color:#9ca3af;">無設定資料</td>`;
     closuresBody.appendChild(tr);
     return;
   }
   active.forEach(({ c, idx }) => {
-    const reasonText = (c.reason && c.reason.trim()) ? c.reason : '-';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${closureTypeBadge(c.type)}</td>
-      <td>${reasonText}</td>
+      <td>${reasonCell(c)}</td>
       <td>
         <div>${formatDateTC(c.from)}</div>
-        <div>${formatDateTC(c.to)}</div>
+        ${c.from !== c.to ? `<div>${formatDateTC(c.to)}</div>` : ''}
       </td>
       <td>${closureSlotText(c)}</td>
       <td>
@@ -1016,19 +1014,17 @@ function renderClosureHistory() {
 
   if (!expired.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="4" style="color:#9ca3af;">無歷史紀錄</td>`;
+    tr.innerHTML = `<td colspan="3" style="color:#9ca3af;">無歷史紀錄</td>`;
     closureHistoryBody.appendChild(tr);
   } else {
     const start = (closureHistoryPage - 1) * closureHistoryPageSize;
     expired.slice(start, start + closureHistoryPageSize).forEach(c => {
-      const reasonText = (c.reason && c.reason.trim()) ? c.reason : '-';
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${closureTypeBadge(c.type)}</td>
-        <td>${reasonText}</td>
+        <td>${reasonCell(c)}</td>
         <td>
           <div>${formatDateTC(c.from)}</div>
-          <div>${formatDateTC(c.to)}</div>
+          ${c.from !== c.to ? `<div>${formatDateTC(c.to)}</div>` : ''}
         </td>
         <td>${closureSlotText(c)}</td>
       `;
@@ -1084,29 +1080,25 @@ function renderClosureSlots() {
 }
 
 function applyClosureTypeUI() {
-  const isHours = closureWork.type === 'hoursChange';
-  $('#closureAllDayRow').hidden = isHours;
-  $('#closureSlotsHeader').textContent = isHours ? '營業時段' : '休息時段';
-  const showSlots = isHours ? true : !closureWork.allDay;
-  $('#closureSlotsRow').hidden = !showSlots;
+  // Type is implied by allDay: true → closure, false → hoursChange.
+  $('#closureSlotsRow').hidden = closureWork.allDay;
 }
 
 function openClosureModal(index) {
   editingClosureIndex = index;
   const t = todayISO();
   if (index < 0) {
-    closureWork = { type: 'closure', reason: '', i18n: { en: '', ja: '' }, from: t, to: t, allDay: true, slots: [] };
+    closureWork = { reason: '', showToCustomer: false, i18n: { en: '', ja: '' }, from: t, to: t, allDay: true, slots: [] };
   } else {
     const src = closureState.list[index];
-    closureWork = { ...src, type: src.type || 'closure', i18n: { ...src.i18n }, slots: src.slots.map(s => ({...s})) };
+    closureWork = { ...src, showToCustomer: !!src.showToCustomer, i18n: { ...src.i18n }, slots: src.slots.map(s => ({...s})) };
   }
-  $$('#closureTypeChoice input[type=radio]').forEach(r => {
-    r.checked = r.value === closureWork.type;
-  });
-  $$('#closureAllDayChoice input[type=radio]').forEach(r => {
+  $$('#closureModeChoice input[type=radio]').forEach(r => {
     r.checked = r.value === (closureWork.allDay ? 'all' : 'range');
   });
   $('#closureReason').value = closureWork.reason;
+  $('#closureShowToCustomer').checked = closureWork.showToCustomer;
+  clearReasonError();
   $('#closureFrom').value = closureWork.from;
   $('#closureTo').value = closureWork.to;
   applyClosureTypeUI();
@@ -1151,23 +1143,33 @@ closuresBody.addEventListener('click', (e) => {
   }
 });
 
-$('#closureAllDayChoice').addEventListener('change', (e) => {
+$('#closureModeChoice').addEventListener('change', (e) => {
   const r = e.target.closest('input[type=radio]');
   if (!r || !closureWork) return;
   closureWork.allDay = r.value === 'all';
-  applyClosureTypeUI();
-});
-$('#closureTypeChoice').addEventListener('change', (e) => {
-  const r = e.target.closest('input[type=radio]');
-  if (!r || !closureWork) return;
-  closureWork.type = r.value;
-  if (closureWork.type === 'hoursChange' && !closureWork.slots.length) {
+  if (!closureWork.allDay && !closureWork.slots.length) {
     closureWork.slots.push({ start: '08:00', end: '20:00', overnight: false });
   }
   applyClosureTypeUI();
   renderClosureSlots();
 });
-$('#closureReason').addEventListener('input', e => closureWork.reason = e.target.value);
+function showReasonError() {
+  $('#closureReasonError').hidden = false;
+  $('#closureReason').classList.add('invalid');
+}
+function clearReasonError() {
+  $('#closureReasonError').hidden = true;
+  $('#closureReason').classList.remove('invalid');
+}
+
+$('#closureReason').addEventListener('input', e => {
+  closureWork.reason = e.target.value;
+  if (e.target.value.trim()) clearReasonError();
+});
+$('#closureShowToCustomer').addEventListener('change', e => {
+  closureWork.showToCustomer = e.target.checked;
+  if (!e.target.checked) clearReasonError();
+});
 $('#closureFrom').addEventListener('input', e => closureWork.from = e.target.value);
 $('#closureTo').addEventListener('input', e => closureWork.to = e.target.value);
 
@@ -1197,17 +1199,19 @@ closureSlotsBody.addEventListener('click', (e) => {
 });
 
 $('#saveClosureBtn').addEventListener('click', () => {
-  const isHours = closureWork.type === 'hoursChange';
-  const needsSlots = isHours || !closureWork.allDay;
-  if (needsSlots && !closureWork.slots.length) {
-    showToast(isHours ? '請至少新增一個營業時段' : '請至少新增一個休息時段');
+  if (closureWork.showToCustomer && !closureWork.reason.trim()) {
+    showReasonError();
+    $('#closureReason').focus();
     return;
   }
+  clearReasonError();
+  if (!closureWork.allDay && !closureWork.slots.length) { showToast('請至少新增一個營業時段'); return; }
   if (closureWork.from > closureWork.to) { showToast('日期到不可早於日期從'); return; }
   const entry = {
     ...closureWork,
-    allDay: isHours ? false : closureWork.allDay,
-    slots: closureWork.slots.map(s => ({...s})),
+    // Type is derived from allDay: full-day → closure, partial → hoursChange.
+    type: closureWork.allDay ? 'closure' : 'hoursChange',
+    slots: closureWork.allDay ? [] : closureWork.slots.map(s => ({...s})),
     i18n: { ...closureWork.i18n },
   };
   if (editingClosureIndex < 0) closureState.list.push(entry);
