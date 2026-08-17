@@ -181,14 +181,16 @@ button { font-family: inherit; cursor: pointer; }
 
 .modal-overlay.nested { z-index: 110; }
 
-.day-checks { display: flex; gap: 24px; flex-wrap: wrap; padding-top: 8px; }
+.day-checks { display: flex; gap: 24px; flex-wrap: wrap; padding-top: 8px; align-items: center; }
 .day-checks label {
   display: inline-flex; align-items: center; gap: 6px;
-  color: #4b5563; font-size: 14px; cursor: pointer;
+  color: #4b5563; font-size: 14px; line-height: 1; cursor: pointer;
 }
+.day-checks label > span { display: inline-flex; align-items: center; line-height: 1; }
 .day-checks input[type="checkbox"],
 .day-checks input[type="radio"] {
-  width: 16px; height: 16px; accent-color: #6b7280;
+  width: 16px; height: 16px; margin: 0; vertical-align: middle;
+  accent-color: #6b7280; flex-shrink: 0;
 }
 
 .btn {
