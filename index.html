@@ -605,9 +605,9 @@ button { font-family: inherit; cursor: pointer; }
               <button class="btn btn-primary btn-sm" id="openI18nBtn">多語系</button>
             </div>
             <div class="day-checks" style="padding-top: 10px;">
-              <label><input type="checkbox" id="closureShowToCustomer" /><span>顯示於消費者端</span></label>
+              <label><input type="checkbox" id="closureShowToCustomer" /><span>公開顯示於消費者端</span></label>
             </div>
-            <div class="field-error" id="closureReasonError" hidden>勾選「顯示於消費者端」時需填寫原因</div>
+            <div class="field-error" id="closureReasonError" hidden>公開時需填寫原因</div>
           </div>
         </div>
 
@@ -949,7 +949,7 @@ const EYE_OFF_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none"
 
 function visibilityTag(showToCustomer) {
   return showToCustomer
-    ? `<span class="vis-tag on">${EYE_SVG}<span>對外</span></span>`
+    ? `<span class="vis-tag on">${EYE_SVG}<span>公開</span></span>`
     : `<span class="vis-tag off">${EYE_OFF_SVG}<span>內部</span></span>`;
 }
 
