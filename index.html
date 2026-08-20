@@ -102,11 +102,28 @@ button { font-family: inherit; cursor: pointer; }
 
 .form-row { display: flex; align-items: center; padding: 14px 0; border-bottom: 0; }
 .form-row.align-top { align-items: flex-start; }
+.form-row.label-center-helper .form-label {
+  align-self: flex-start;
+  padding-top: 0;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+}
 .form-row + .form-row { margin-top: 4px; }
 
 .form-label { width: 140px; flex-shrink: 0; color: #4b5563; font-size: 14px; padding-top: 8px; }
 .form-control { flex: 1; min-width: 0; }
 .helper { color: #6b7280; font-size: 13px; margin-bottom: 10px; padding-top: 8px; }
+.business-day-times {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.business-day-times .input { width: auto; }
+.biz-time-field { display: inline-flex; align-items: center; gap: 8px; }
+.sub-form-label { color: #4b5563; font-size: 14px; }
 .link { color: #29b6f6; }
 .link:hover { text-decoration: underline; }
 
@@ -419,6 +436,24 @@ button { font-family: inherit; cursor: pointer; }
         </div>
 
         <section class="card content-card" id="businessPane">
+          <div class="form-row align-top">
+            <label class="form-label">營業日時間</label>
+            <div class="form-control">
+              <div class="helper">決定一個營業日的計算範圍，影響每日帳務結算時間。</div>
+              <div class="business-day-times">
+                <div class="biz-time-field">
+                  <label class="sub-form-label">開始時間</label>
+                  <input type="time" class="input" value="08:00" />
+                </div>
+                <div class="biz-time-field">
+                  <label class="sub-form-label">結束時間</label>
+                  <input type="time" class="input" value="20:00" />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
           <div class="form-row">
             <label class="form-label">時區</label>
             <div class="form-control">
@@ -431,8 +466,8 @@ button { font-family: inherit; cursor: pointer; }
             </div>
           </div>
 
-          <div class="form-row align-top">
-            <label class="form-label">營業時間</label>
+          <div class="form-row align-top label-center-helper">
+            <label class="form-label">門市營業時間</label>
             <div class="form-control">
               <div class="helper-row">
                 <div class="helper">例行性營業時段，顯示於線上點餐店家資訊。</div>
@@ -457,7 +492,7 @@ button { font-family: inherit; cursor: pointer; }
             </div>
           </div>
 
-          <div class="form-row align-top">
+          <div class="form-row align-top label-center-helper">
             <label class="form-label">臨時異動</label>
             <div class="form-control">
               <div class="helper-row">
@@ -501,7 +536,7 @@ button { font-family: inherit; cursor: pointer; }
   <div class="modal-overlay" id="hoursModal" hidden>
     <div class="modal">
       <div class="modal-header">
-        <h2>營業時間</h2>
+        <h2>門市營業時間</h2>
         <button class="modal-close" id="modalClose" aria-label="close">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
