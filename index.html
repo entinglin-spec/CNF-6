@@ -116,13 +116,13 @@ button { font-family: inherit; cursor: pointer; }
 .helper { color: #6b7280; font-size: 13px; margin-bottom: 10px; padding-top: 8px; }
 .business-day-times {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
   flex-wrap: wrap;
   margin-top: 10px;
 }
-.business-day-times .input { width: auto; }
-.biz-time-field { display: inline-flex; align-items: center; gap: 8px; }
+.biz-time-field { display: flex; flex-direction: column; gap: 8px; min-width: 260px; }
+.biz-time-field .input { width: 100%; height: 44px; font-size: 15px; color: #4b5563; }
 .sub-form-label { color: #4b5563; font-size: 14px; }
 .link { color: #29b6f6; }
 .link:hover { text-decoration: underline; }
